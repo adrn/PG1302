@@ -37,16 +37,11 @@ def eccentric_anomaly(t, ecc, t0, Tbin):
         ecc_anomalies.append(minEA[0])
     return np.array(ecc_anomalies) % (2*np.pi)
 
-def model(t, ecc, ww, t0, KK, Tbin):
-    # e = 0.0
-    # ww= pi/3.
+# def model(t, ecc, ww, t0, KK, Tbin):
+def model(t, ecc, ww, t0, KK):
     incl = np.pi/2.
-    # Mbin = Msun*10**(9.4)
-    # Tbin = 5.2*yr
-    # T0 = 2.2*yr
-    # q=0.01
-    # KK = 0.06*c
     vmean = 0.0  # vmean*c
+    Tbin = 1899.3
 
     # Solve for Eccentric Anamoly and then f(t)
     ecc_anom = eccentric_anomaly(t, ecc, t0, Tbin)
@@ -70,7 +65,8 @@ def ln_likelihood(p, t, y, dy):
     return -0.5 * (y - model(t,*p))**2 / dy**2
 
 def ln_prior(p):
-    ecc, ww, t0, KK, Tbin = p
+    # ecc, ww, t0, KK, Tbin = p
+    ecc, ww, t0, KK = p
 
     if ecc < 0. or ecc >= 1.:
         return -np.inf
@@ -114,8 +110,10 @@ def main(mpi=False):
     pinit = [0.25,  # eccentricity
              0.0,  # ww
              600,  # t0
-             0.08 * c,  # KK
-             (5.2*u.year).decompose(usys).value]  # binary period
+             0.08 * c] #,  # KK
+    #         (5.2*u.year).decompose(usys).value]  # binary period
+    pstd = [0.01, 0.01, 10., 0.01*c]#,
+    #        (0.05*u.year).decompose(usys).value]
 
     # plot data with initial guess
     # plt.errorbar(t, lum, err, marker='o', ecolor='#888888', linestyle='none')
@@ -132,8 +130,7 @@ def main(mpi=False):
 
     logger.debug("Sampling initial conditions for walkers")
     p0 = emcee.utils.sample_ball(pinit,
-                                 std=[0.01,0.01, 10., 0.01*c,
-                                      (0.05*u.year).decompose(usys).value],
+                                 std=pstd,
                                  size=nwalkers)
 
     logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
