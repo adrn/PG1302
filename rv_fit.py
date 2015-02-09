@@ -121,31 +121,35 @@ def main(mpi=False):
     # plt.show()
 
     nwalkers = len(pinit) * 4
-    nburn = 25
+    nburn = 100
     nsteps = 1000
-    sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
-                                    lnpostfn=ln_posterior,
-                                    args=(t, lum, err),
-                                    pool=pool)
+    if not os.path.exists("chain.npy"):
+        sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
+                                        lnpostfn=ln_posterior,
+                                        args=(t, lum, err),
+                                        pool=pool)
 
-    logger.debug("Sampling initial conditions for walkers")
-    p0 = emcee.utils.sample_ball(pinit,
-                                 std=pstd,
-                                 size=nwalkers)
+        logger.debug("Sampling initial conditions for walkers")
+        p0 = emcee.utils.sample_ball(pinit,
+                                     std=pstd,
+                                     size=nwalkers)
 
-    logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
-    timer0 = time.time()
-    pos,prob,state = sampler.run_mcmc(p0, nburn)
-    logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
+        logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
+        timer0 = time.time()
+        pos,prob,state = sampler.run_mcmc(p0, nburn)
+        logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
 
-    # sampler.reset()
-    # pos,prob,state = sampler.run_mcmc(pos, 1000)
+        sampler.reset()
+        pos,prob,state = sampler.run_mcmc(pos, 1000)
+        np.save("chain.npy", sampler.chain)
+    else:
+        chain = np.load("chain.npy")
 
     pool.close()
 
     plt.clf()
     for i in range(nwalkers):
-        plt.plot(sampler.chain[i,:,0], drawstyle='steps', marker=None)
+        plt.plot(chain[i,:,0], drawstyle='steps', marker=None)
     plt.savefig("rv-fit-mcmc-test.png")
 
     sys.exit(0)
