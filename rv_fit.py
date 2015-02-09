@@ -122,7 +122,7 @@ def main(mpi=False):
 
     nwalkers = len(pinit) * 4
     nburn = 100
-    nsteps = 1000
+    nsteps = 250
     if not os.path.exists("chain.npy"):
         sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                         lnpostfn=ln_posterior,
