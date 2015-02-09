@@ -71,7 +71,7 @@ def ln_prior(p):
     if ecc < 0. or ecc >= 1.:
         return -np.inf
 
-    if KK/c >= 1.:
+    if KK/c >= 1. or KK < 0.:
         return -np.inf
 
     # if t0 < 300 or t0 > 750:
@@ -135,8 +135,8 @@ def main(mpi=False):
     # plt.show()
 
     nwalkers = len(pinit) * 4
-    nburn = 100
-    nsteps = 250
+    nburn = 50
+    nsteps = 100
     if not os.path.exists("chain.npy"):
         sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                         lnpostfn=ln_posterior,
