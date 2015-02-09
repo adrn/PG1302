@@ -38,7 +38,7 @@ def eccentric_anomaly(t, ecc, t0, Tbin):
     return np.array(ecc_anomalies) % (2*np.pi)
 
 # def model(t, ecc, ww, t0, KK, Tbin):
-def model(t, ecc, ww, t0, KK):
+def model(t, ecc, cosw, t0, KK):
     incl = np.pi/2.
     vmean = 0.0  # vmean*c
     Tbin = 1899.3
@@ -49,7 +49,7 @@ def model(t, ecc, ww, t0, KK):
 
     # Now get radial velocity from Kepler problem
     # KK        = q/(1.+q) * nn*sep * sin(incl)/sqrt(1.-e*e)
-    vsec = vmean + KK*(np.cos(ww + f_t) + ecc*np.cos(ww))  # div by q to get seconday vel
+    vsec = vmean + KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
     # vpr        = q*vsec
 
     # NOW COMPUTE REL. BEAMING FORM RAD VEL
@@ -65,8 +65,8 @@ def ln_likelihood(p, t, y, dy):
     return -0.5 * (y - model(t,*p))**2 / dy**2
 
 def ln_prior(p):
-    # ecc, ww, t0, KK, Tbin = p
-    ecc, ww, t0, KK = p
+    # ecc, cosw, t0, KK, Tbin = p
+    ecc, cosw, t0, KK = p
 
     if ecc < 0. or ecc >= 1.:
         return -np.inf
@@ -75,6 +75,9 @@ def ln_prior(p):
         return -np.inf
 
     if t0 < 300 or t0 > 750:
+        return -np.inf
+
+    if cosw < -1 or cosw > 1:
         return -np.inf
 
     return 0.
@@ -118,8 +121,8 @@ def main(mpi=False):
     t,y,dy = read_data()
 
     # initial guess at params
-    pinit = [0.25,  # eccentricity
-             0.0,  # ww
+    pinit = [0.05,  # eccentricity
+             0.0,  # cosw
              600,  # t0
              0.08 * c] #,  # KK
     #         (5.2*u.year).decompose(usys).value]  # binary period
