@@ -134,7 +134,7 @@ def main(mpi=False):
     # plt.plot(t, model(t, *pinit), linestyle='none')
     # plt.show()
 
-    nwalkers = len(pinit) * 4
+    nwalkers = 48 #len(pinit) * 4
     nburn = 50
     nsteps = 100
     if not os.path.exists("chain.npy"):
