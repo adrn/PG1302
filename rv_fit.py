@@ -74,7 +74,7 @@ def ln_prior(p):
     if KK/c >= 1.:
         return -np.inf
 
-    if t0 < 500 or t0 > 950:
+    if t0 < 300 or t0 > 750:
         return -np.inf
 
     return 0.
@@ -90,16 +90,7 @@ def ln_posterior(p, *args):
 
     return lnp + lnl.sum()
 
-def test_model():
-    t = np.linspace(0,3000.,500)
-    m = model(t, 0., np.pi/3., 0., 0.06*c, (5.2*u.year).to(u.day).value)
-    plt.plot(t, m, linestyle='none')
-    plt.show()
-
-def main(mpi=False):
-
-    pool = get_pool(mpi=mpi)
-
+def read_data():
     # read data
     t,lum,err = np.loadtxt("Lums_PG1302.dat").T
     ix = t.argsort()
@@ -108,6 +99,23 @@ def main(mpi=False):
     t = t[ix] - t.min()
     lum = lum[ix] - lum.mean()
     err = err[ix]
+
+    return t,lum,err
+
+def test_model():
+
+    t,y,dy = read_data()
+    plt.errorbar(t, y, dy, marker='o', ecolor='#888888', linestyle='none')
+
+    m = model(t, 0.06, -0.6, 300., 0.06*c)
+    plt.plot(t, m, linestyle='-', marker=None)
+    plt.show()
+
+def main(mpi=False):
+
+    pool = get_pool(mpi=mpi)
+
+    t,y,dy = read_data()
 
     # initial guess at params
     pinit = [0.25,  # eccentricity
@@ -129,7 +137,7 @@ def main(mpi=False):
     if not os.path.exists("chain.npy"):
         sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                         lnpostfn=ln_posterior,
-                                        args=(t, lum, err),
+                                        args=(t, y, dy),
                                         pool=pool)
 
         logger.debug("Sampling initial conditions for walkers")
