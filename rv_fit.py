@@ -123,20 +123,20 @@ def main(mpi=False):
     # plt.show()
 
     nwalkers = len(pinit) * 4
-    nburn = 100
+    nburn = 25
     nsteps = 1000
     sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                     lnpostfn=ln_posterior,
                                     args=(t, lum, err),
                                     pool=pool)
 
-    logger.info("Sampling initial conditions for walkers")
+    logger.debug("Sampling initial conditions for walkers")
     p0 = emcee.utils.sample_ball(pinit,
                                  std=[0.01,0.01, 10., 0.01*c,
                                       (0.05*u.year).decompose(usys).value],
                                  size=nwalkers)
 
-    logger.info("Running MCMC sampler")
+    logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
     timer0 = time.time()
     pos,prob,state = sampler.run_mcmc(p0, nburn)
     logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
@@ -147,7 +147,7 @@ def main(mpi=False):
     pool.close()
 
     plt.clf()
-    for i in range(sampler.nwalkers):
+    for i in range(nwalkers):
         plt.plot(sampler.chain[i,:,0], drawstyle='steps', marker=None)
     plt.savefig("rv-fit-mcmc-test.png")
 
