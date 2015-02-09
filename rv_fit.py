@@ -49,7 +49,7 @@ def model(t, ecc, cosw, t0, KK):
 
     # Now get radial velocity from Kepler problem
     # KK        = q/(1.+q) * nn*sep * sin(incl)/sqrt(1.-e*e)
-    vsec = vmean + KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
+    vsec = vmean + c*KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
     # vpr        = q*vsec
 
     # NOW COMPUTE REL. BEAMING FORM RAD VEL
@@ -71,7 +71,7 @@ def ln_prior(p):
     if ecc < 0. or ecc >= 1.:
         return -np.inf
 
-    if KK/c >= 1. or KK < 0.:
+    if KK >= 1. or KK < 0.:
         return -np.inf
 
     # if t0 < 300 or t0 > 750:
@@ -124,9 +124,9 @@ def main(mpi=False):
     pinit = [0.05,  # eccentricity
              0.0,  # cosw
              600,  # t0
-             0.08 * c]  #,  # KK
+             0.08]  #,  # KK
     #         (5.2*u.year).decompose(usys).value]  # binary period
-    pstd = [0.01, 0.01, 10., 0.01*c]#,
+    pstd = [0.01, 0.01, 10., 0.01]  #,
     #        (0.05*u.year).decompose(usys).value]
 
     # plot data with initial guess
