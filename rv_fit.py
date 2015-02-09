@@ -38,10 +38,10 @@ def eccentric_anomaly(t, ecc, t0, Tbin):
     return np.array(ecc_anomalies) % (2*np.pi)
 
 # def model(t, ecc, ww, t0, KK, Tbin):
-def model(t, ecc, cosw, t0, KK):
+def model(t, ecc, cosw, t0, KK, Tbin):
     incl = np.pi/2.
     vmean = 0.0  # vmean*c
-    Tbin = 1899.3
+    # Tbin = 1899.3
 
     # Solve for Eccentric Anamoly and then f(t)
     ecc_anom = eccentric_anomaly(t, ecc, t0, Tbin)
@@ -65,8 +65,8 @@ def ln_likelihood(p, t, y, dy):
     return -0.5 * (y - model(t,*p))**2 / dy**2
 
 def ln_prior(p):
-    # ecc, cosw, t0, KK, Tbin = p
-    ecc, cosw, t0, KK = p
+    ecc, cosw, t0, KK, Tbin = p
+    # ecc, cosw, t0, KK = p
 
     if ecc < 0. or ecc >= 1.:
         return -np.inf
@@ -110,7 +110,7 @@ def test_model():
     t,y,dy = read_data()
     plt.errorbar(t, y, dy, marker='o', ecolor='#888888', linestyle='none')
 
-    m = model(t, 0.06, -0.6, 300., 0.06*c)
+    m = model(t, 0.0, 0.2, 1100., 0.057)
     plt.plot(t, m, linestyle='-', marker=None)
     plt.show()
 
@@ -123,20 +123,20 @@ def main(mpi=False):
     # initial guess at params
     pinit = [0.05,  # eccentricity
              0.0,  # cosw
-             600,  # t0
-             0.08]  #,  # KK
-    #         (5.2*u.year).decompose(usys).value]  # binary period
-    pstd = [0.01, 0.01, 10., 0.01]  #,
-    #        (0.05*u.year).decompose(usys).value]
+             1000,  # t0
+             0.08,  # KK
+             (5.2*u.year).decompose(usys).value]  # binary period
+    pstd = [0.01, 0.01, 10., 0.01,
+            (0.05*u.year).decompose(usys).value]
 
     # plot data with initial guess
     # plt.errorbar(t, lum, err, marker='o', ecolor='#888888', linestyle='none')
     # plt.plot(t, model(t, *pinit), linestyle='none')
     # plt.show()
 
-    nwalkers = 48 #len(pinit) * 4
-    nburn = 50
-    nsteps = 100
+    nwalkers = 64  # len(pinit) * 4
+    nburn = 250
+    nsteps = 1000
     if not os.path.exists("chain.npy"):
         sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                         lnpostfn=ln_posterior,
