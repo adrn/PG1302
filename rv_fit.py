@@ -140,8 +140,12 @@ def main(mpi=False):
         logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
 
         sampler.reset()
-        pos,prob,state = sampler.run_mcmc(pos, 1000)
+
+        timer0 = time.time()
+        logger.info("Running main sampling ({0} walkers) for {1} steps".format(nwalkers, nsteps))
+        pos,prob,state = sampler.run_mcmc(pos, nsteps)
         np.save("chain.npy", sampler.chain)
+        logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
     else:
         chain = np.load("chain.npy")
 
