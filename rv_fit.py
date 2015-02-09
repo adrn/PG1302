@@ -74,6 +74,9 @@ def ln_prior(p):
     if KK/c >= 1.:
         return -np.inf
 
+    if t0 < 500 or t0 > 950:
+        return -np.inf
+
     return 0.
 
 def ln_posterior(p, *args):
@@ -152,7 +155,7 @@ def main(mpi=False):
         chain = np.load("chain.npy")
 
     pool.close()
-    
+
     for j in range(len(pinit)):
         plt.clf()
         for i in range(nwalkers):
