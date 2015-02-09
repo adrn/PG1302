@@ -74,8 +74,8 @@ def ln_prior(p):
     if KK/c >= 1.:
         return -np.inf
 
-    if t0 < 300 or t0 > 750:
-        return -np.inf
+    # if t0 < 300 or t0 > 750:
+    #     return -np.inf
 
     if cosw < -1 or cosw > 1:
         return -np.inf
@@ -124,7 +124,7 @@ def main(mpi=False):
     pinit = [0.05,  # eccentricity
              0.0,  # cosw
              600,  # t0
-             0.08 * c] #,  # KK
+             0.08 * c]  #,  # KK
     #         (5.2*u.year).decompose(usys).value]  # binary period
     pstd = [0.01, 0.01, 10., 0.01*c]#,
     #        (0.05*u.year).decompose(usys).value]
