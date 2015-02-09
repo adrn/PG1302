@@ -144,17 +144,20 @@ def main(mpi=False):
         timer0 = time.time()
         logger.info("Running main sampling ({0} walkers) for {1} steps".format(nwalkers, nsteps))
         pos,prob,state = sampler.run_mcmc(pos, nsteps)
-        np.save("chain.npy", sampler.chain)
+
+        chain = sampler.chain
+        np.save("chain.npy", chain)
         logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
     else:
         chain = np.load("chain.npy")
 
     pool.close()
-
-    plt.clf()
-    for i in range(nwalkers):
-        plt.plot(chain[i,:,0], drawstyle='steps', marker=None)
-    plt.savefig("rv-fit-mcmc-test.png")
+    
+    for j in range(len(pinit)):
+        plt.clf()
+        for i in range(nwalkers):
+            plt.plot(chain[i,:,j], drawstyle='steps', marker=None)
+        plt.savefig("rv-fit-mcmc-test-{0}.png".format(j))
 
     sys.exit(0)
 
