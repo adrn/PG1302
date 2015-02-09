@@ -20,8 +20,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fmin
 
-# Project
-# ...
+# Custom
+from gary.util import get_pool
 
 usys = (u.day, u.Msun, u.au)
 G = G.decompose(usys).value
@@ -97,7 +97,10 @@ def test_model():
     plt.plot(t, m, linestyle='none')
     plt.show()
 
-def main():
+def main(mpi=False):
+
+    pool = get_pool(mpi=mpi)
+
     # read data
     t,lum,err = np.loadtxt("Lums_PG1302.dat").T
     ix = t.argsort()
@@ -124,7 +127,8 @@ def main():
     nsteps = 1000
     sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
                                     lnpostfn=ln_posterior,
-                                    args=(t, lum, err))
+                                    args=(t, lum, err),
+                                    pool=pool)
 
     logger.info("Sampling initial conditions for walkers")
     p0 = emcee.utils.sample_ball(pinit,
@@ -140,10 +144,14 @@ def main():
     # sampler.reset()
     # pos,prob,state = sampler.run_mcmc(pos, 1000)
 
+    pool.close()
+
     plt.clf()
     for i in range(sampler.nwalkers):
         plt.plot(sampler.chain[i,:,0], drawstyle='steps', marker=None)
-    plt.show()
+    plt.savefig("rv-fit-mcmc-test.png")
+
+    sys.exit(0)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -155,6 +163,8 @@ if __name__ == '__main__':
                         default=False, help="Be chatty! (default = False)")
     parser.add_argument("-q", "--quiet", action="store_true", dest="quiet",
                         default=False, help="Be quiet! (default = False)")
+    parser.add_argument("--mpi", dest="mpi", default=False, action="store_true",
+                        help="Use an MPI pool.")
 
     args = parser.parse_args()
 
@@ -166,4 +176,4 @@ if __name__ == '__main__':
     else:
         logger.setLevel(logging.INFO)
 
-    main()
+    main(mpi=args.mpi)
