@@ -49,9 +49,9 @@ def model(t, ecc, cosw, t0, KK, Tbin):
 
     # Now get radial velocity from Kepler problem
     # KK        = q/(1.+q) * nn*sep * sin(incl)/sqrt(1.-e*e)
-    # vsec = vmean + c*KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
-    ww = np.arccos(cosw)
-    vsec = vmean + c*KK*(np.cos(ww + f_t) + ecc*cosw)
+    a = -1.
+    vsec = vmean + c*KK*(cosw*np.cos(f_t) - a*np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
+    # vsec = vmean + c*KK*(np.cos(ww + f_t) + ecc*np.cos(ww))
     # vpr        = q*vsec
 
     # NOW COMPUTE REL. BEAMING FORM RAD VEL
@@ -178,7 +178,8 @@ def main(mpi=False):
     pos,prob,state = sampler.run_mcmc(pos, nsteps)
 
     chain = sampler.chain
-    np.save(os.path.join(PGPATH,"chain.npy"), chain)
+    np.save(os.path.join(PGPATH,"chain2.npy"), chain)
+    np.save(os.path.join(PGPATH,"flatlnprob2.npy"), sampler.flatlnprobability)
     logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
 
     pool.close()
