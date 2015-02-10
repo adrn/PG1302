@@ -27,14 +27,15 @@ usys = (u.day, u.Msun, u.au)
 G = G.decompose(usys).value
 c = c.decompose(usys).value
 
+# PGPATH = "/vega/astro/users/amp2217/projects/PG1302"
+PGPATH = "/Users/adrian/projects/PG1302"
+
 def eccentric_anomaly_func(ecc_anom, t, ecc, t0, Tbin):
     return (2.*np.pi/Tbin*(t-t0) - ecc_anom + ecc*np.sin(ecc_anom))**2.
 
 def eccentric_anomaly(t, ecc, t0, Tbin):
-    ecc_anomalies = []
-    for t_i in t:
-        minEA = fmin(eccentric_anomaly_func, 0., args=(t_i,ecc,t0,Tbin), disp=False)
-        ecc_anomalies.append(minEA[0])
+    ecc_anomalies = [fmin(eccentric_anomaly_func, 0., args=(t_i,ecc,t0,Tbin), disp=False)[0]
+                        for t_i in t]
     return np.array(ecc_anomalies) % (2*np.pi)
 
 def model(t, ecc, cosw, t0, KK, Tbin):
@@ -84,7 +85,7 @@ def ln_prior(p):
 
     if cosw < -1 or cosw > 1:
         return -np.inf
-    
+
     # if V < 0.:
     #     return -np.inf
     # lnp -= np.log(V)
@@ -104,7 +105,7 @@ def ln_posterior(p, *args):
 
 def read_data():
     # read data
-    t,lum,err = np.loadtxt("/vega/astro/users/amp2217/projects/PG1302/Lums_PG1302.dat").T
+    t,lum,err = np.loadtxt(os.path.join(PGPATH, "data/Lums_PG1302.dat")).T
     ix = t.argsort()
 
     # sort on time, subtract min time, subtract mean magnitude
@@ -127,6 +128,10 @@ def main(mpi=False):
 
     pool = get_pool(mpi=mpi)
 
+    # file cleanup
+    if os.path.exists(os.path.join(PGPATH,"burn_in_done")):
+        os.remove(os.path.join(PGPATH,"burn_in_done"))
+
     t,y,dy = read_data()
 
     # initial guess at params
@@ -134,7 +139,7 @@ def main(mpi=False):
              0.0,  # cosw
              1000,  # t0
              0.08,  # KK
-             (5.2*u.year).decompose(usys).value],  # binary period
+             (5.2*u.year).decompose(usys).value]  # binary period
     pstd = [0.01, 0.01, 10., 0.01,
             (0.05*u.year).decompose(usys).value]
     # 0.01]
@@ -163,6 +168,9 @@ def main(mpi=False):
     pos,prob,state = sampler.run_mcmc(p0, nburn)
     logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
 
+    with open(os.path.join(PGPATH,"burn_in_done"), "w") as f:
+        f.write("yup")
+
     sampler.reset()
 
     timer0 = time.time()
@@ -170,7 +178,7 @@ def main(mpi=False):
     pos,prob,state = sampler.run_mcmc(pos, nsteps)
 
     chain = sampler.chain
-    np.save("/vega/astro/users/amp2217/projects/PG1302/chain.npy", chain)
+    np.save(os.path.join(PGPATH,"chain.npy"), chain)
     logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
 
     pool.close()
@@ -179,7 +187,7 @@ def main(mpi=False):
         plt.clf()
         for i in range(nwalkers):
             plt.plot(chain[i,:,j], drawstyle='steps', marker=None)
-        plt.savefig("/vega/astro/users/amp2217/projects/PG1302/rv-fit-mcmc-test-{0}.png".format(j))
+        plt.savefig(os.path.join(PGPATH,"plots/rv-fit-mcmc-test-{0}.png".format(j)))
 
     sys.exit(0)
 
