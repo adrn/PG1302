@@ -130,7 +130,7 @@ def main(mpi=False):
              1000,  # t0
              0.08,  # KK
              (5.2*u.year).decompose(usys).value,  # binary period
-             0.1] # extra variance
+             0.1]  # extra variance
     pstd = [0.01, 0.01, 10., 0.01,
             (0.05*u.year).decompose(usys).value,
             0.01]
@@ -143,33 +143,31 @@ def main(mpi=False):
     nwalkers = 64  # len(pinit) * 4
     nburn = 250
     nsteps = 1000
-    if not os.path.exists("chain.npy"):
-        sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
-                                        lnpostfn=ln_posterior,
-                                        args=(t, y, dy),
-                                        pool=pool)
 
-        logger.debug("Sampling initial conditions for walkers")
-        p0 = emcee.utils.sample_ball(pinit,
-                                     std=pstd,
-                                     size=nwalkers)
+    sampler = emcee.EnsembleSampler(nwalkers, dim=len(pinit),
+                                    lnpostfn=ln_posterior,
+                                    args=(t, y, dy),
+                                    pool=pool)
 
-        logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
-        timer0 = time.time()
-        pos,prob,state = sampler.run_mcmc(p0, nburn)
-        logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
+    logger.debug("Sampling initial conditions for walkers")
+    p0 = emcee.utils.sample_ball(pinit,
+                                 std=pstd,
+                                 size=nwalkers)
 
-        sampler.reset()
+    logger.info("Burning in MCMC sampler ({0} walkers) for {1} steps".format(nwalkers, nburn))
+    timer0 = time.time()
+    pos,prob,state = sampler.run_mcmc(p0, nburn)
+    logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nburn))
 
-        timer0 = time.time()
-        logger.info("Running main sampling ({0} walkers) for {1} steps".format(nwalkers, nsteps))
-        pos,prob,state = sampler.run_mcmc(pos, nsteps)
+    sampler.reset()
 
-        chain = sampler.chain
-        np.save("chain.npy", chain)
-        logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
-    else:
-        chain = np.load("chain.npy")
+    timer0 = time.time()
+    logger.info("Running main sampling ({0} walkers) for {1} steps".format(nwalkers, nsteps))
+    pos,prob,state = sampler.run_mcmc(pos, nsteps)
+
+    chain = sampler.chain
+    np.save("/vega/astro/users/amp2217/projects/PG1302/chain.npy", chain)
+    logger.debug("Took {:.2f} seconds to run for {} steps.".format(time.time()-timer0, nsteps))
 
     pool.close()
 
@@ -177,7 +175,7 @@ def main(mpi=False):
         plt.clf()
         for i in range(nwalkers):
             plt.plot(chain[i,:,j], drawstyle='steps', marker=None)
-        plt.savefig("rv-fit-mcmc-test-{0}.png".format(j))
+        plt.savefig("/vega/astro/users/amp2217/projects/PG1302/rv-fit-mcmc-test-{0}.png".format(j))
 
     sys.exit(0)
 
