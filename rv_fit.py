@@ -62,13 +62,14 @@ def model(t, ecc, cosw, t0, KK, Tbin):
 
     return mags
 
-def ln_likelihood(pp, t, y, dy):
-    V = pp[-1]
-    p = pp[:-1]
+def ln_likelihood(p, t, y, dy):
+    # V = pp[-1]
+    # p = pp[:-1]
+    V = 0.
     return -0.5 * (y - model(t,*p))**2 / (dy**2 + V)
 
 def ln_prior(p):
-    ecc, cosw, t0, KK, Tbin, V = p
+    ecc, cosw, t0, KK, Tbin = p
 
     lnp = 0.
 
@@ -84,7 +85,7 @@ def ln_prior(p):
     if cosw < -1 or cosw > 1:
         return -np.inf
 
-    lnp -= np.log(V)
+    # lnp -= np.log(V)
 
     return lnp
 
@@ -131,11 +132,10 @@ def main(mpi=False):
              0.0,  # cosw
              1000,  # t0
              0.08,  # KK
-             (5.2*u.year).decompose(usys).value,  # binary period
-             0.1]  # extra variance
+             (5.2*u.year).decompose(usys).value],  # binary period
     pstd = [0.01, 0.01, 10., 0.01,
-            (0.05*u.year).decompose(usys).value,
-            0.01]
+            (0.05*u.year).decompose(usys).value]
+    # 0.01]
 
     # plot data with initial guess
     # plt.errorbar(t, lum, err, marker='o', ecolor='#888888', linestyle='none')
