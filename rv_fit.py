@@ -82,6 +82,9 @@ def ln_prior(p):
     if cosw < -1 or cosw > 1:
         return -np.inf
 
+    if V <= 0.:
+        return -np.inf
+
     lnp -= np.log(V)
 
     return lnp
