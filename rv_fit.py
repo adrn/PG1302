@@ -48,7 +48,9 @@ def model(t, ecc, cosw, t0, KK, Tbin):
 
     # Now get radial velocity from Kepler problem
     # KK        = q/(1.+q) * nn*sep * sin(incl)/sqrt(1.-e*e)
-    vsec = vmean + c*KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
+    # vsec = vmean + c*KK*(cosw*np.cos(f_t) - np.sqrt(1-cosw**2)*np.sin(f_t) + ecc*cosw)  # div by q to get seconday vel
+    ww = np.arccos(cosw)
+    vsec = vmean + c*KK*(np.cos(ww + f_t) + ecc*cosw)
     # vpr        = q*vsec
 
     # NOW COMPUTE REL. BEAMING FORM RAD VEL
