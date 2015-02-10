@@ -28,7 +28,7 @@ G = G.decompose(usys).value
 c = c.decompose(usys).value
 
 def eccentric_anomaly_func(ecc_anom, t, ecc, t0, Tbin):
-    return np.abs(2.*np.pi/Tbin*(t-t0) - ecc_anom + ecc*np.sin(ecc_anom))
+    return (2.*np.pi/Tbin*(t-t0) - ecc_anom + ecc*np.sin(ecc_anom))**2.
 
 def eccentric_anomaly(t, ecc, t0, Tbin):
     ecc_anomalies = []
@@ -55,7 +55,7 @@ def model(t, ecc, cosw, t0, KK, Tbin):
     GamS = 1. / np.sqrt(1. - (vsec/c)**2)
     DopS = 1. / (GamS * (1. - vsec/c * np.cos(incl - np.pi/2.)))
 
-    DopLum = DopS**(3. - 1.1)
+    DopLum = DopS**(3.0 - 1.1)
     mags = 5./2. * np.log10(DopLum)  # mag - mag0= -2.5 * log10(F(t)/F_0)  =  -2.5 * log10(DopLum)
 
     return mags
@@ -63,7 +63,7 @@ def model(t, ecc, cosw, t0, KK, Tbin):
 def ln_likelihood(pp, t, y, dy):
     V = pp[-1]
     p = pp[:-1]
-    return -0.5 * (y - model(t,*p))**2 / (dy + V)**2
+    return -0.5 * (y - model(t,*p))**2 / (dy**2 + V)
 
 def ln_prior(p):
     ecc, cosw, t0, KK, Tbin, V = p
