@@ -95,7 +95,7 @@ def ln_posterior(p, *args):
 
 def read_data():
     # read data
-    t,lum,err = np.loadtxt("Lums_PG1302.dat").T
+    t,lum,err = np.loadtxt("/vega/astro/users/amp2217/projects/PG1302/Lums_PG1302.dat").T
     ix = t.argsort()
 
     # sort on time, subtract min time, subtract mean magnitude
